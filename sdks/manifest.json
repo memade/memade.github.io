@@ -1,0 +1,11 @@
+{
+    "apis": [
+        "init-sdk",
+        "user-auth",
+        "user-info",
+        "order-create",
+        "order-query",
+        "data-stats",
+        "file-upload"
+    ]
+}

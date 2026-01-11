@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>API文档 - ChenLian®开放平台</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <nav class="navbar">
+      <div class="nav-container">
+        <a href="index.html" class="nav-logo">ChenLian®开放平台</a>
+        <ul class="nav-menu">
+          <li><a href="index.html">首页</a></li>
+          <li><a href="overview.html">概述</a></li>
+          <li><a href="docs.html" class="active">API文档</a></li>
+          <li><a href="javascript:void(0)" onclick="openDownloadModal()">下载</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <div class="docs-container">
+      <!-- 左侧导航 -->
+      <aside class="sidebar">
+        <div class="sidebar-content">
+          <h3>API列表</h3>
+          <ul class="api-list" id="apiList">
+            <!-- 动态生成 -->
+          </ul>
+        </div>
+      </aside>
+
+      <!-- 右侧内容区 -->
+      <main class="content">
+        <div id="apiContent">
+          <h1>API 接口文档</h1>
+          <p>请从左侧列表选择要查看的API接口。</p>
+        </div>
+      </main>
+    </div>
+
+    <!-- 核心脚本 -->
+    <script src="script.js"></script>
+
+    <!-- Mermaid 流程图库 -->
+    <script type="module">
+      import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+      mermaid.initialize({ 
+        startOnLoad: false,
+        theme: 'default',
+        themeVariables: {
+          primaryColor: '#2563eb',
+          primaryTextColor: '#fff',
+          primaryBorderColor: '#1e40af',
+          lineColor: '#64748b',
+          secondaryColor: '#f8fafc',
+          tertiaryColor: '#e2e8f0'
+        }
+      });
+      window.mermaid = mermaid;
+    </script>
+
+    <!-- API配置中心 - 所有API在这一个文件中统一管理 -->
+    <script src="sdks/apis.js"></script>
+
+    <footer class="page-footer">
+      <div class="footer-content">
+        <p>&copy; 2026 ChenLian® 开放平台. 保留所有权利.</p>
+      </div>
+    </footer>
+
+    <!-- 下载模态框 -->
+    <div id="downloadModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>SDK 下载</h2>
+          <span class="close-btn" onclick="closeDownloadModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+          <p style="text-align: center; margin-bottom: 2rem; color: var(--secondary-color);">选择适合您操作系统的SDK版本进行下载</p>
+          <div class="sdk-download-grid">
+            <div class="sdk-card">
+              <div class="sdk-icon">🖥️</div>
+              <h3>Windows SDK</h3>
+              <p class="sdk-version">v1.0.0</p>
+              <p class="sdk-desc">支持 Windows 10/11</p>
+              <button class="btn-download" onclick="downloadSDK('windows')">
+                <span class="download-icon">⬇</span> 下载
+              </button>
+            </div>
+
+            <div class="sdk-card sdk-card-disabled">
+              <div class="sdk-icon">🐧</div>
+              <h3>Linux SDK</h3>
+              <p class="sdk-version">v1.0.0</p>
+              <p class="sdk-desc">暂不支持</p>
+              <button class="btn-download" disabled>
+                <span class="download-icon">⬇</span> 下载
+              </button>
+            </div>
+
+            <div class="sdk-card sdk-card-disabled">
+              <div class="sdk-icon"></div>
+              <h3>macOS SDK</h3>
+              <p class="sdk-version">v1.0.0</p>
+              <p class="sdk-desc">暂不支持</p>
+              <button class="btn-download" disabled>
+                <span class="download-icon">⬇</span> 下载
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // 打开下载模态框
+      function openDownloadModal() {
+        document.getElementById('downloadModal').style.display = 'block';
+        document.body.style.overflow = 'hidden';
+      }
+
+      // 关闭下载模态框
+      function closeDownloadModal() {
+        document.getElementById('downloadModal').style.display = 'none';
+        document.body.style.overflow = 'auto';
+      }
+
+      // 点击模态框外部关闭
+      window.onclick = function(event) {
+        const modal = document.getElementById('downloadModal');
+        if (event.target === modal) {
+          closeDownloadModal();
+        }
+      }
+
+      // SDK下载功能
+      function downloadSDK(sdkType) {
+        const sdkUrls = {
+          'windows': 'http://192.168.0.99/res/clsdkDemo.zip',
+          'linux': 'sdks/downloads/chenlian-sdk-linux-v1.0.0.tar.gz',
+          'macos': 'sdks/downloads/chenlian-sdk-macos-v1.0.0.dmg'
+        };
+
+        const sdkNames = {
+          'windows': 'Windows SDK',
+          'linux': 'Linux SDK',
+          'macos': 'macOS SDK'
+        };
+
+        const url = sdkUrls[sdkType];
+        const name = sdkNames[sdkType];
+
+        // 创建下载链接
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = '';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        // 显示提示
+        alert(`正在下载 ${name}...\n\n如果下载未开始，请检查SDK文件是否存在。`);
+      }
+    </script>
+  </body>
+</html>

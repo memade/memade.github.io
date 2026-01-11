@@ -1,0 +1,81 @@
+graph TB
+        %% Top-level controller / API
+        A["main<br/>控制器 / API<br/><i>http-port: 65535</i>"]
+
+        %% Queue and scheduler
+        subgraph QueueLayer[队列与调度]
+            Q["Redis / Task Queue\n(Redis + Bull / RQ)"]
+            S["Scheduler\n(速率/优先/重试)"]
+            Q --> S
+        end
+
+        A -->|POST task| Q
+        A -->|admin ops| S
+
+        %% Worker pool and browser instances
+        subgraph WorkerPool[Worker 池（容器化）]
+            direction TB
+            W1["worker-1\n(chromium worker)\nprofile: /profiles/inst-1"]
+            W2["worker-2\n(chromium worker)\nprofile: /profiles/inst-2"]
+            W3["worker-N\n(...可 scale) "]
+            W1 ---|takes job| Q
+            W2 ---|takes job| Q
+            W3 ---|takes job| Q
+        end
+
+        %% Browser lifecycle endpoints (inside worker)
+        W1 --> O["brw/open\n(创建浏览器上下文)"]
+        W1 --> C["brw/close\n(销毁 & 清理)"]
+        W2 --> O
+        W2 --> C
+
+        %% Proxy / Network layer
+        subgraph Network[网络与代理池]
+            PPool["Proxy Pool\n(residential / SOCKS / HTTP)"]
+            IPCheck["IP 验证\n(httpbin/ip) "]
+            PPool --> IPCheck
+        end
+        W1 -->|bind proxy| PPool
+        W2 -->|bind proxy| PPool
+        W3 -->|bind proxy| PPool
+
+        %% CAPTCHA & human solve
+        Captcha["CAPTCHA 服务\n(2Captcha / 人工) "]
+        W1 -->|captcha challenge| Captcha
+        W2 -->|captcha challenge| Captcha
+
+        %% Storage and results
+        subgraph Storage[结果存储]
+            ES["Elasticsearch / Postgres"]
+            S3["S3 / Object Store (screenshots)"]
+            ES --> S3
+        end
+        W1 -->|store results| ES
+        W2 -->|store screenshots| S3
+
+        %% Monitoring & logs
+        subgraph Observability[监控 & 日志]
+            Prom["Prometheus"]
+            Graf["Grafana"]
+            Loki["Loki / ELK" ]
+            Prom --> Graf
+            W1 -->|metrics| Prom
+            W2 -->|metrics| Prom
+            W1 -->|logs| Loki
+            W2 -->|logs| Loki
+        end
+
+        %% Notes / styling
+        classDef entry fill:#f8f9fa,stroke:#2b6cb0,stroke-width:1px,color:#1a202c,font-weight:600;
+        classDef action fill:#ffffff,stroke:#cbd5e1,stroke-width:1px,color:#2d3748;
+        class A entry;
+        class Q,S,PPool,ES,S3,Prom,Graf,Loki action;
+
+        %% Text notes (render as plain text in many previewers)
+        %% - main: API 接受任务 (关键词、并发量、代理偏好、截图选项)
+        %% - QueueLayer: 用于平衡与速率控制，避免直接击穿 target
+        %% - WorkerPool: 每个 worker 是独立容器，内含 chromium 与指纹注入逻辑
+        %% - Network: 每个 worker 绑定独立代理或从池中借用，先做 IP 验证
+        %% - Captcha: 当检测到 CAPTCHA 时上报并交由自动或人工服务处理
+        %% - Storage: 结构化结果（title/url/snippet/rank）和截图分开存储
+        %% - Observability: metrics/alerts/logs，用于追踪 CAPTCHA 率与资源上限
